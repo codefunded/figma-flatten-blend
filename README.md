@@ -5,7 +5,7 @@
 **Export Figma layers with blend modes as correct, transparent PNGs.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Figma Plugin](https://img.shields.io/badge/Figma-Plugin-a259ff?logo=figma&logoColor=white)](https://www.figma.com/community/plugin/flatten-blend)
+[![Figma Plugin](https://img.shields.io/badge/Figma-Plugin-a259ff?logo=figma&logoColor=white)](https://www.figma.com/community/plugin/1624442377315278998/flatten-blend)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](tsconfig.json)
 
 </div>
@@ -28,7 +28,7 @@ Figma cannot export a layer with a blend mode (Multiply, Screen, Overlay, and al
 
 ## Install
 
-**[→ Get it from the Figma Community](https://www.figma.com/community/plugin/flatten-blend)**
+**[→ Get it from the Figma Community](https://www.figma.com/community/plugin/1624442377315278998/flatten-blend)**
 
 Search for **"Flatten Blend"** in the Figma Community plugins tab and click **Install**. Works in both Figma Desktop and Figma Web. Free, no account required.
 
