@@ -30,6 +30,7 @@ const normalNotice       = document.getElementById('normal-notice')!;
 let currentNodeName  = 'layer';
 let tooltipVisible   = false;
 let exportGeneration = 0;
+let isExporting      = false;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function normalizeHex(raw: string): string {
@@ -135,11 +136,14 @@ function handleNodeMetadata(payload: NodeMetadata): void {
   previewCanvas.hidden = true;
   previewPlaceholder.hidden = false;
   setStatus('');
-  exportBtn.disabled = false;
+  if (!isExporting) {
+    exportBtn.disabled = false;
+  }
 }
 
 async function handleExportResult(payload: ExportResult): Promise<void> {
   const generation = ++exportGeneration;
+  isExporting = true;
   setStatus('Compositing pixels…');
 
   try {
@@ -160,7 +164,10 @@ async function handleExportResult(payload: ExportResult): Promise<void> {
         return;
       }
       const ctx = previewCanvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        URL.revokeObjectURL(previewUrl);
+        return;
+      }
       previewCanvas.width  = payload.width;
       previewCanvas.height = payload.height;
       ctx.drawImage(img, 0, 0);
@@ -187,6 +194,7 @@ async function handleExportResult(payload: ExportResult): Promise<void> {
   } catch (err) {
     setStatus(`Compositing failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
   } finally {
+    isExporting = false;
     exportBtn.disabled = false;
   }
 }
