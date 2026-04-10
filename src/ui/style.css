@@ -1,0 +1,22 @@
+/* Blend Flatten plugin UI styles */
+/* TODO: implement full design (see SPEC.md Step 4) */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+  color: #333;
+  background: #fff;
+  padding: 16px;
+}
+
+h1 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
