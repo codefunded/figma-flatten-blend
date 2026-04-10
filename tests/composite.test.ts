@@ -60,4 +60,10 @@ describe('compositePixels', () => {
     const result = compositePixels(composited, alpha);
     expect(result.length).toBe(size);
   });
+
+  it('throws when length is not a multiple of 4', () => {
+    expect(() =>
+      compositePixels(new Uint8ClampedArray(5), new Uint8ClampedArray(5))
+    ).toThrow();
+  });
 });

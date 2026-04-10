@@ -46,4 +46,8 @@ describe('hasNonNormalBlendModes', () => {
   it('returns false for only NORMAL', () => expect(hasNonNormalBlendModes(['NORMAL'])).toBe(false));
   it('returns true for mixed', () => expect(hasNonNormalBlendModes(['NORMAL', 'MULTIPLY'])).toBe(true));
   it('returns true for all non-normal', () => expect(hasNonNormalBlendModes(['SCREEN', 'OVERLAY'])).toBe(true));
+  it('returns false for only PASS_THROUGH', () =>
+    expect(hasNonNormalBlendModes(['PASS_THROUGH'])).toBe(false));
+  it('returns true for PASS_THROUGH mixed with non-normal', () =>
+    expect(hasNonNormalBlendModes(['PASS_THROUGH', 'MULTIPLY'])).toBe(true));
 });
