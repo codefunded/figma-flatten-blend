@@ -6,6 +6,10 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": ["src/common/*"]
+    },
     "typeRoots": [
       "./node_modules/@types",
       "./node_modules/@figma"
