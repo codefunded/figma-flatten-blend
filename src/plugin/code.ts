@@ -1,6 +1,7 @@
 // src/plugin/code.ts
 // Figma plugin sandbox. Access to figma.* API. No DOM, no window, no fetch.
 import type { ExportRequest, NodeMetadata, PluginMessage } from '@common/types';
+import { isExportRequest } from '@common/types';
 import { hexToRgbNormalized } from '@common/color-utils';
 
 figma.showUI(__html__, { width: 320, height: 520 });
@@ -139,8 +140,8 @@ async function runExportPipeline(request: ExportRequest): Promise<void> {
     });
 
     // Step F: Remove bg rect, neutralize clone's blend mode, export for alpha
-    rect.remove();
     tempNodes.splice(tempNodes.indexOf(rect), 1);
+    rect.remove();
 
     if ('blendMode' in clone) {
       (clone as SceneNode & { blendMode: BlendMode }).blendMode = 'NORMAL';
@@ -173,9 +174,8 @@ async function runExportPipeline(request: ExportRequest): Promise<void> {
 
 // ─── Message handler ───────────────────────────────────────────────────────
 figma.ui.onmessage = (rawMsg: unknown): void => {
-  const msg = rawMsg as PluginMessage;
-  if (msg.type === 'export-request') {
-    runExportPipeline(msg.payload).catch((err: unknown) => {
+  if (isExportRequest(rawMsg)) {
+    runExportPipeline(rawMsg.payload).catch((err: unknown) => {
       figma.ui.postMessage({
         type: 'error',
         message: `Export failed: ${err instanceof Error ? err.message : String(err)}`,
