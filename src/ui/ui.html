@@ -3,14 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blend Flatten</title>
+  <title>Flatten Blend</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <div id="app">
-    <h1>Blend Flatten</h1>
-    <p>Loading...</p>
+  <!-- Header -->
+  <header class="plugin-header">
+    <h1 class="plugin-title">Flatten Blend</h1>
+    <p class="plugin-desc">Export blend-mode layers as transparent PNG</p>
+  </header>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="empty-state" hidden>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <rect x="6" y="6" width="20" height="20" rx="2" stroke="#999" stroke-width="1.5" stroke-dasharray="4 2"/>
+      <path d="M13 16h6M16 13v6" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <p>Select a single layer<br>to get started</p>
   </div>
+
+  <!-- Main content -->
+  <main id="main-content" hidden>
+
+    <!-- Selection info -->
+    <section class="section" aria-label="Selection info">
+      <div class="info-row">
+        <span class="info-label">Layer</span>
+        <span id="node-name" class="info-value node-name" title="">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Type</span>
+        <span id="node-type" class="info-value">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Size</span>
+        <span id="node-size" class="info-value">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Blend</span>
+        <span id="node-blend" class="info-value">—</span>
+      </div>
+      <div id="child-modes-row" class="info-row" hidden>
+        <span class="info-label">Children</span>
+        <span id="child-modes" class="info-value child-modes">—</span>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Reference color -->
+    <section class="section" aria-label="Reference color">
+      <div class="section-header">
+        <label class="section-title" for="hex-input">Reference color</label>
+        <button id="tooltip-btn" class="tooltip-btn" aria-label="Why this color?" type="button">?</button>
+      </div>
+      <div id="color-tooltip" class="tooltip" role="tooltip" hidden></div>
+      <div class="color-row">
+        <input id="color-picker" type="color" value="#ffffff" class="color-swatch" aria-label="Color picker" />
+        <span class="color-hash">#</span>
+        <input id="hex-input" type="text" class="hex-field" maxlength="6" value="ffffff"
+               spellcheck="false" autocomplete="off" aria-label="Hex color value" />
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Scale -->
+    <section class="section" aria-label="Export scale">
+      <div class="row-space-between">
+        <label class="section-title" for="scale-select">Scale</label>
+        <select id="scale-select" class="scale-select" aria-label="Export scale">
+          <option value="1">1×</option>
+          <option value="2" selected>2×</option>
+          <option value="3">3×</option>
+          <option value="4">4×</option>
+        </select>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Preview -->
+    <section class="section preview-section" aria-label="Preview">
+      <p class="section-title">Preview</p>
+      <div id="preview-container" class="preview-container">
+        <div id="preview-placeholder" class="preview-placeholder">Preview will appear after export</div>
+        <canvas id="preview-canvas" class="preview-canvas" hidden></canvas>
+      </div>
+    </section>
+
+    <p class="warning-text">Output looks correct only on backgrounds close to the reference color.</p>
+    <p id="normal-notice" class="normal-notice" hidden>This layer uses Normal blend — export is identical to a standard Figma export.</p>
+
+    <hr class="divider" />
+
+    <!-- Actions -->
+    <section class="section actions-section">
+      <button id="export-btn" class="btn-primary" type="button" disabled>Export PNG</button>
+      <p id="status-line" class="status-line" aria-live="polite"></p>
+    </section>
+
+  </main>
+
   <script type="module" src="./main.ts"></script>
 </body>
 </html>
