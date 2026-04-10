@@ -22,7 +22,7 @@ Figma cannot export a layer with a blend mode (Multiply, Screen, Overlay, and al
 
 ## Demo
 
-<video src="demo.mp4" autoplay loop muted playsinline width="100%"></video>
+<video src="https://github.com/user-attachments/assets/91021bdb-e689-432a-bcee-4fd16be302f9" autoplay loop muted playsinline width="100%"></video>
 
 ---
 
