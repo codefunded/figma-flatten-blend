@@ -12,7 +12,7 @@ export interface NodeMetadata {
 
 export interface ExportRequest {
   referenceColor: string; // 6-digit hex with leading #, e.g. "#FFFFFF"
-  scale: number;          // 1 | 2 | 3 | 4
+  scale: 1 | 2 | 3 | 4;  // export scale multiplier
 }
 
 export interface ExportResult {
@@ -31,7 +31,7 @@ export type PluginMessage =
 
 // ─── Runtime type guards ────────────────────────────────────────────────────
 
-const VALID_SCALES = new Set([1, 2, 3, 4]);
+const VALID_SCALES = new Set<1 | 2 | 3 | 4>([1, 2, 3, 4]);
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 export function isExportRequest(msg: unknown): msg is { type: 'export-request'; payload: ExportRequest } {
@@ -40,11 +40,13 @@ export function isExportRequest(msg: unknown): msg is { type: 'export-request'; 
   if (m['type'] !== 'export-request') return false;
   const p = m['payload'] as Record<string, unknown> | undefined;
   if (typeof p !== 'object' || p === null) return false;
+  const color = p['referenceColor'];
+  const scale = p['scale'];
   return (
-    typeof p['referenceColor'] === 'string' &&
-    HEX_RE.test(p['referenceColor'] as string) &&
-    typeof p['scale'] === 'number' &&
-    VALID_SCALES.has(p['scale'] as number)
+    typeof color === 'string' &&
+    HEX_RE.test(color) &&
+    typeof scale === 'number' &&
+    VALID_SCALES.has(scale as 1 | 2 | 3 | 4)
   );
 }
 
@@ -71,6 +73,8 @@ export function isExportResult(msg: unknown): msg is { type: 'export-result'; pa
   if (m['type'] !== 'export-result') return false;
   const p = m['payload'] as Record<string, unknown> | undefined;
   if (typeof p !== 'object' || p === null) return false;
+  // composited and alphaSource are internal byte arrays — element types not validated
+  // (both sides are controlled by this codebase; a type mismatch would be a programmer error)
   return (
     Array.isArray(p['composited']) &&
     Array.isArray(p['alphaSource']) &&

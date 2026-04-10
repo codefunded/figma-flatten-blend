@@ -9,6 +9,8 @@ export type BlendModeCategory =
   | 'component'
   | 'other';
 
+// NORMAL and PASS_THROUGH are intentionally absent — they fall through to 'other' via ?? fallback.
+// PASS_THROUGH is a container-level mode, not a pixel-blend mode.
 const CATEGORY_MAP: Record<string, BlendModeCategory> = {
   DARKEN:       'darken',
   MULTIPLY:     'darken',

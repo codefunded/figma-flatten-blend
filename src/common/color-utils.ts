@@ -20,7 +20,10 @@ export function isValidHex(input: string): boolean {
   return parseHex(input) !== null;
 }
 
-/** Parse a 6-digit hex into normalized 0–1 values for Figma's RGB type. */
+/**
+ * Parse a 6-digit hex into normalized 0–1 values for Figma's RGB type.
+ * @throws {Error} if input is not a valid 6-digit hex color
+ */
 export function hexToRgbNormalized(hex: string): { r: number; g: number; b: number } {
   const parsed = parseHex(hex);
   if (!parsed) throw new Error(`Invalid hex color: ${hex}`);
