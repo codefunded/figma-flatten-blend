@@ -1,24 +1,82 @@
-# Blend Flatten
+<div align="center">
 
-A Figma plugin that exports any layer with a non-NORMAL blend mode as a flattened, transparent PNG — so it composites correctly in any design tool or browser.
+# Flatten Blend
 
-## Why it exists
+**Export Figma layers with blend modes as correct, transparent PNGs.**
 
-Figma's built-in export does not honour blend modes. When you export a layer set to Multiply, Screen, Overlay, or any of the other 17 non-NORMAL blend modes, you get a flat PNG with the blend effect baked against a white background — not a transparent PNG that preserves the visual intent. Blend Flatten works around this limitation by rendering the layer against a chosen reference colour, then mathematically inverting the composite to recover the per-pixel alpha, giving you a transparent PNG that looks identical when placed back over the same reference colour in any other tool.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Figma Plugin](https://img.shields.io/badge/Figma-Plugin-a259ff?logo=figma&logoColor=white)](https://www.figma.com/community/plugin/flatten-blend)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](tsconfig.json)
 
-## Install from Figma Community
+</div>
 
-Search for **Blend Flatten** in the Figma Community plugins tab, or open the link directly from the Figma Community page, and click **Install**.
+---
 
-The published plugin works in both **Figma Desktop** and **Figma Web**.
+## The Problem
 
-## How to build for development
+Figma cannot export a layer with a blend mode (Multiply, Screen, Overlay, and all the others) as a transparent PNG. The blend effect disappears, colors shift, or a white background appears out of nowhere. This isn't a bug — blend modes are mathematically context-dependent, and without a background to blend against, the export has no meaning.
+
+**This has been a known, unsolved pain point since at least 2021.** Dozens of forum threads, zero solutions, until now.
+
+---
+
+## Demo
+
+<!-- Drop your demo video here. Recommended: record a short screencast, upload to YouTube, then replace the block below. -->
+
+> **Video coming soon.** To embed: upload a thumbnail as `assets/demo-thumb.png`, then replace this block with:
+> ```markdown
+> [![Watch the demo](assets/demo-thumb.png)](https://youtu.be/YOUR_VIDEO_ID)
+> ```
+
+---
+
+## Install
+
+**[→ Get it from the Figma Community](https://www.figma.com/community/plugin/flatten-blend)**
+
+Search for **"Flatten Blend"** in the Figma Community plugins tab and click **Install**. Works in both Figma Desktop and Figma Web. Free, no account required.
+
+---
+
+## Features
+
+- **All 17 blend modes** — Multiply, Screen, Overlay, Soft Light, Hard Light, Darken, Lighten, Color Dodge, Color Burn, Linear Dodge, Linear Burn, Difference, Exclusion, Hue, Saturation, Color, Luminosity
+- **Smart reference color defaults** — automatically picks the best reference background per blend mode category:
+
+  | Category | Modes | Default |
+  |---|---|---|
+  | Darken | Multiply, Darken, Linear Burn, Color Burn | White `#FFFFFF` |
+  | Lighten | Screen, Lighten, Linear Dodge, Color Dodge | Black `#000000` |
+  | Contrast | Overlay, Soft Light, Hard Light | 50% Gray `#808080` |
+  | Comparative | Difference, Exclusion | Black `#000000` |
+  | Component | Hue, Saturation, Color, Luminosity | White `#FFFFFF` |
+
+- **Export scales** — 1×, 2×, 3×, 4×
+- **Live preview** — checkerboard canvas shows the transparent result before you download
+- **100% local** — no network access, no accounts, no telemetry. Your designs never leave Figma.
+
+---
+
+## How It Works
+
+1. **Select a layer** with any blend mode (or a frame/group that contains blend-mode layers).
+2. **Open Flatten Blend.** The plugin reads the layer's blend mode and auto-selects a reference color.
+3. **Override the reference color** if needed, choose your export scale, and hit **Export**.
+
+Under the hood, the plugin renders your layer twice — once against a pure white background and once against pure black — then uses the difference between the two renders to mathematically recover the true per-pixel alpha. This is the same technique used internally by professional compositing software, and it handles complex cases like MULTIPLY layers with white-background images or nested blend mode trees.
+
+The result: a transparent PNG whose colors match exactly what you see on canvas in Figma.
+
+---
+
+## Development
 
 ### Prerequisites
 
 - Node 20+
 - npm 10+
-- Figma Desktop (required for loading a local development build)
+- Figma Desktop (required for loading a local build)
 
 ### Setup
 
@@ -32,39 +90,48 @@ npm run build
 ### Load in Figma Desktop
 
 1. Open Figma Desktop.
-2. Go to **Plugins → Development → Import plugin from manifest…**
-3. Select the `manifest.json` file at the root of this repository.
+2. **Plugins → Development → Import plugin from manifest…**
+3. Select `manifest.json` at the root of this repo.
 
-> Note: loading a plugin from a local manifest file requires **Figma Desktop**. The published plugin (installed from the Community) works in both Desktop and Web.
-
-## Development (watch mode)
+### Watch mode
 
 ```bash
 npm run dev
 ```
 
-Vite will watch for changes and rebuild automatically. Reload the plugin in Figma Desktop to pick up updates.
+Vite rebuilds on every save. Reload the plugin in Figma Desktop to pick up changes.
 
-## Type checking
+### Type check
 
 ```bash
 npm run typecheck
 ```
 
-## How it works
+---
 
-1. **Select a layer** — the plugin reads the layer's blend mode and suggests a smart reference colour (e.g. white for Multiply/Darken group, black for Screen/Lighten group, 50% grey for contrast modes).
-2. **Choose a reference colour** — you can override the suggestion with any colour via the colour picker.
-3. **Choose export scale** — 1x, 2x, 3x, or 4x.
-4. **Render** — the plugin clones the target layer twice, places each clone on a solid-colour rectangle (reference colour and its inverse), exports both as PNGs, then uses pixel arithmetic to solve for the true alpha channel.
-5. **Download** — the resulting transparent PNG is handed back to the Figma UI and downloaded through the browser save dialog. All temporary nodes are removed in a `try/finally` block so the document is never left in a dirty state.
+## Known Limitations
 
-## Known limitations
+- **Approximate for some component blend modes.** Hue, Saturation, Color, and Luminosity modes are non-linear and may show slight color inaccuracies. A neutral gray reference gives the best results.
+- **Large exports may hit Figma's memory limit.** If the export fails, try a lower scale factor.
+- **sRGB only.** Wide-gamut (Display P3) color spaces are not preserved.
 
-- **Visual accuracy depends on reference colour.** For some blend modes (e.g. Hue, Saturation, Color, Luminosity) the alpha-recovery math is approximate; choose a neutral grey for best results.
-- **Nested blend modes are not supported.** If the target layer contains children that themselves use non-NORMAL blend modes, the export represents only the outermost composite.
-- **Large or high-resolution layers may hit Figma's memory limits.** If the export fails, try a lower scale.
-- **Colour profile is sRGB.** Figma exports in sRGB; wide-gamut colour spaces are not preserved.
+---
+
+## Support This Project
+
+If Flatten Blend saved you time, consider buying me a coffee. It helps me keep the plugin free and maintained.
+
+<div align="center">
+
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?logo=github&logoColor=white)](https://github.com/sponsors/wojciechbak)
+
+</div>
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for bug reports, pull request guidelines, and code style notes.
 
 ## License
 

@@ -11,7 +11,7 @@ export default defineConfig({
     },
     outDir: path.resolve('dist'),
     emptyOutDir: false,
-    target: 'es2020',
+    target: 'es2017',
     rollupOptions: {
       output: { entryFileNames: 'code.js' },
     },

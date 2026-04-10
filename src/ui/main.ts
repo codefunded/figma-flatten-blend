@@ -148,8 +148,8 @@ async function handleExportResult(payload: ExportResult): Promise<void> {
 
   try {
     const blob = await compositeBlob(
-      new Uint8Array(payload.composited),
-      new Uint8Array(payload.alphaSource),
+      payload.whiteBg,
+      payload.blackBg,
       payload.width,
       payload.height,
     );

@@ -2,44 +2,64 @@
 // Pixel compositing — UI iframe context only. No figma.* APIs.
 
 /**
- * Pure pixel compositor. Combines blend-mode-aware RGB with original alpha.
- * No canvas or DOM required — operates on raw RGBA arrays.
+ * Dual-background alpha extraction.
  *
- * @param composited - RGBA pixel data from the blend-mode-composited render (solid bg).
- *   RGB channels = blend-mode-composited pixels. Alpha channel = ignored (fully opaque).
- * @param alphaSource - RGBA pixel data from the NORMAL-mode render (no background).
- *   Alpha channel = true content opacity. RGB channels = ignored.
- * @returns New Uint8ClampedArray with baked RGB and correct alpha.
- * @throws If array lengths don't match or aren't a multiple of 4.
+ * Given the same scene rendered once on pure white and once on pure black,
+ * extracts a true RGBA result that composites correctly on ANY background:
+ *
+ *   diff[c]  = white[c] - black[c]          (per channel, 0–255)
+ *   alpha    = 255 - max(diff.R, diff.G, diff.B)
+ *   color[c] = black[c] * 255 / alpha       (unmultiply; clamped to 255)
+ *
+ * Why this works:
+ *   - Fully transparent area   → white shows bg (255), black shows bg (0)  → diff=255, alpha=0
+ *   - Opaque pixel (NORMAL)    → same on both backgrounds                  → diff=0,   alpha=255
+ *   - MULTIPLY white pixel     → white×white=255, white×black=0            → diff=255, alpha=0  ✓
+ *   - MULTIPLY shadow (gray N) → N on white, 0 on black                    → diff=N,   alpha=255-N  ✓
  */
 export function compositePixels(
-  composited: Uint8ClampedArray,
-  alphaSource: Uint8ClampedArray,
+  whiteBg: Uint8ClampedArray,
+  blackBg: Uint8ClampedArray,
 ): Uint8ClampedArray {
-  if (composited.length !== alphaSource.length) {
+  if (whiteBg.length !== blackBg.length) {
     throw new Error(
-      `Array length mismatch: composited=${composited.length}, alphaSource=${alphaSource.length}`,
+      `Array length mismatch: whiteBg=${whiteBg.length}, blackBg=${blackBg.length}`,
     );
   }
-  if (composited.length % 4 !== 0) {
-    throw new Error(`Array length must be a multiple of 4, got ${composited.length}`);
+  if (whiteBg.length % 4 !== 0) {
+    throw new Error(`Array length must be a multiple of 4, got ${whiteBg.length}`);
   }
 
-  const output = new Uint8ClampedArray(composited.length);
-  for (let i = 0; i < composited.length; i += 4) {
-    output[i + 0] = composited[i + 0]; // R from blend-composited render
-    output[i + 1] = composited[i + 1]; // G from blend-composited render
-    output[i + 2] = composited[i + 2]; // B from blend-composited render
-    output[i + 3] = alphaSource[i + 3]; // A from isolated (NORMAL) render
+  const output = new Uint8ClampedArray(whiteBg.length);
+
+  for (let i = 0; i < whiteBg.length; i += 4) {
+    const rW = whiteBg[i + 0], gW = whiteBg[i + 1], bW = whiteBg[i + 2];
+    const rB = blackBg[i + 0], gB = blackBg[i + 1], bB = blackBg[i + 2];
+
+    const dR = rW - rB;
+    const dG = gW - gB;
+    const dB = bW - bB;
+
+    const alpha = 255 - Math.max(dR, dG, dB);
+
+    let r = 0, g = 0, b = 0;
+    if (alpha > 0) {
+      r = Math.min(255, Math.round(rB * 255 / alpha));
+      g = Math.min(255, Math.round(gB * 255 / alpha));
+      b = Math.min(255, Math.round(bB * 255 / alpha));
+    }
+
+    output[i + 0] = r;
+    output[i + 1] = g;
+    output[i + 2] = b;
+    output[i + 3] = alpha;
   }
+
   return output;
 }
 
 /**
  * Decodes a PNG byte array into ImageData via an OffscreenCanvas.
- *
- * PRECONDITION: `bytes` must be a PNG with exactly `width × height` pixels.
- * Dimensions are not validated; a mismatch will silently produce incorrect pixel data.
  */
 async function decodeToImageData(
   bytes: Uint8Array,
@@ -57,20 +77,21 @@ async function decodeToImageData(
 }
 
 /**
- * Full compositing pipeline: decodes two PNGs, calls compositePixels, returns a PNG Blob.
+ * Full compositing pipeline: decodes two PNGs (white-bg and black-bg renders),
+ * runs dual-background extraction, returns a transparent PNG Blob.
  */
 export async function compositeBlob(
-  compositedBytes: Uint8Array,
-  alphaBytes: Uint8Array,
+  whiteBgBytes: Uint8Array,
+  blackBgBytes: Uint8Array,
   width: number,
   height: number,
 ): Promise<Blob> {
-  const [compositedData, alphaData] = await Promise.all([
-    decodeToImageData(compositedBytes, width, height),
-    decodeToImageData(alphaBytes, width, height),
+  const [whiteBgData, blackBgData] = await Promise.all([
+    decodeToImageData(whiteBgBytes, width, height),
+    decodeToImageData(blackBgBytes, width, height),
   ]);
 
-  const output = compositePixels(compositedData.data, alphaData.data);
+  const output = compositePixels(whiteBgData.data, blackBgData.data);
 
   const outputCanvas = new OffscreenCanvas(width, height);
   const ctx = outputCanvas.getContext('2d');

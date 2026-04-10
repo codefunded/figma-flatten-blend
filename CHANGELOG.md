@@ -1,19 +1,20 @@
 # Changelog
 
-All notable changes to Blend Flatten will be documented in this file.
+All notable changes to Flatten Blend will be documented in this file.
 
-## [Unreleased]
-
-### Added
-- Initial project scaffold
-
-## [1.0.0] — TBD
+## [1.0.0] — 2026-04-10
 
 ### Added
-- Export any non-NORMAL blend mode layer as transparent PNG
-- Reference color picker with smart defaults per blend mode category
-- Scale selector (1x, 2x, 3x, 4x)
-- Preview area with checkerboard background
-- Progress/status indicator
-- Cleanup of all temp nodes (try/finally)
+
+- Export any layer with a non-NORMAL blend mode as a transparent PNG
+- Dual-background compositing algorithm (white + black reference renders) for mathematically correct alpha extraction — handles MULTIPLY with white-background images, nested blend mode trees, and all other cases
 - Support for all 17 non-NORMAL Figma blend modes
+- Smart reference color defaults per blend mode category (white for darken group, black for lighten group, 50% gray for contrast group)
+- User-overridable reference color picker (hex input + native color swatch)
+- Export scale selector: 1×, 2×, 3×, 4×
+- Live preview canvas with checkerboard transparency indicator
+- Status/progress indicator (Requesting export → Compositing pixels → Encoding → Done)
+- Automatic download of the exported PNG on completion
+- Orphan node cleanup on plugin startup (removes any `__bf_temp_*` nodes left from previous crashed runs)
+- All temporary nodes cleaned up in `try/finally` — document is never left dirty
+- 8192px per-axis output guard with user-friendly error message

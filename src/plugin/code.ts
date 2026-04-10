@@ -2,7 +2,6 @@
 // Figma plugin sandbox. Access to figma.* API. No DOM, no window, no fetch.
 import type { ExportRequest, NodeMetadata, PluginMessage } from '@common/types';
 import { isExportRequest } from '@common/types';
-import { hexToRgbNormalized } from '@common/color-utils';
 
 figma.showUI(__html__, { width: 320, height: 520 });
 
@@ -83,7 +82,7 @@ async function runExportPipeline(request: ExportRequest): Promise<void> {
     return;
   }
 
-  const { referenceColor, scale } = request;
+  const { scale } = request;
   const outputWidth  = node.width  * scale;
   const outputHeight = node.height * scale;
 
@@ -104,24 +103,23 @@ async function runExportPipeline(request: ExportRequest): Promise<void> {
     figma.currentPage.appendChild(clone);
     tempNodes.push(clone);
 
-    // Step B: Reference-color background rectangle
+    // Step B: Background rectangle (starts white, will be changed to black)
     const rect = figma.createRectangle();
     rect.name = '__bf_temp_rect';
     rect.resize(node.width, node.height);
-    rect.fills = [{ type: 'SOLID', color: hexToRgbNormalized(referenceColor), opacity: 1, visible: true }];
+    rect.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 }, opacity: 1, visible: true }];
     rect.blendMode = 'NORMAL';
     rect.opacity = 1;
     figma.currentPage.appendChild(rect);
     tempNodes.push(rect);
 
-    // Step C: Wrapper frame
+    // Step C: Wrapper frame (NORMAL — contains all blending within its bounds)
     const wrapper = figma.createFrame();
     wrapper.name = '__bf_temp_frame';
     wrapper.resize(node.width, node.height);
     wrapper.fills = [];
     wrapper.strokes = [];
     wrapper.clipsContent = true;
-    // Step D: Wrapper must be NORMAL to contain blending within it
     wrapper.blendMode = 'NORMAL';
     wrapper.opacity = 1;
     figma.currentPage.appendChild(wrapper);
@@ -132,33 +130,27 @@ async function runExportPipeline(request: ExportRequest): Promise<void> {
     rect.x = 0; rect.y = 0;
     clone.x = 0; clone.y = 0;
 
-    // Step E: Export composited RGB (blend modes active)
-    const compositedBytes = await wrapper.exportAsync({
+    // Step D: Export on pure WHITE background
+    const whiteBgBytes = await wrapper.exportAsync({
       format: 'PNG',
       constraint: { type: 'SCALE', value: scale },
       colorProfile: 'SRGB',
     });
 
-    // Step F: Remove bg rect, neutralize clone's blend mode, export for alpha
-    tempNodes.splice(tempNodes.indexOf(rect), 1);
-    rect.remove();
-
-    if ('blendMode' in clone) {
-      (clone as SceneNode & { blendMode: BlendMode }).blendMode = 'NORMAL';
-    }
-
-    const alphaBytes = await wrapper.exportAsync({
+    // Step E: Swap to BLACK background, export again
+    rect.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 }, opacity: 1, visible: true }];
+    const blackBgBytes = await wrapper.exportAsync({
       format: 'PNG',
       constraint: { type: 'SCALE', value: scale },
       colorProfile: 'SRGB',
     });
 
-    // Step G: Send both byte arrays to UI
+    // Step F: Send both renders to UI for dual-background alpha extraction
     figma.ui.postMessage({
       type: 'export-result',
       payload: {
-        composited: Array.from(compositedBytes),
-        alphaSource: Array.from(alphaBytes),
+        whiteBg: whiteBgBytes,
+        blackBg: blackBgBytes,
         width:  Math.round(node.width  * scale),
         height: Math.round(node.height * scale),
       },

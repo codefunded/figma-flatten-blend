@@ -16,8 +16,8 @@ export interface ExportRequest {
 }
 
 export interface ExportResult {
-  composited: number[];   // PNG bytes from composited export (blend-aware, solid bg)
-  alphaSource: number[];  // PNG bytes from NORMAL-mode export (original alpha)
+  whiteBg: Uint8Array;  // PNG bytes exported on pure white (#FFFFFF) background
+  blackBg: Uint8Array;  // PNG bytes exported on pure black (#000000) background
   width: number;
   height: number;
 }
@@ -73,11 +73,9 @@ export function isExportResult(msg: unknown): msg is { type: 'export-result'; pa
   if (m['type'] !== 'export-result') return false;
   const p = m['payload'] as Record<string, unknown> | undefined;
   if (typeof p !== 'object' || p === null) return false;
-  // composited and alphaSource are internal byte arrays — element types not validated
-  // (both sides are controlled by this codebase; a type mismatch would be a programmer error)
   return (
-    Array.isArray(p['composited']) &&
-    Array.isArray(p['alphaSource']) &&
+    p['whiteBg'] instanceof Uint8Array &&
+    p['blackBg'] instanceof Uint8Array &&
     typeof p['width'] === 'number' &&
     typeof p['height'] === 'number'
   );
