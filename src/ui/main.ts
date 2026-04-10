@@ -29,6 +29,7 @@ const normalNotice       = document.getElementById('normal-notice')!;
 // ─── State ─────────────────────────────────────────────────────────────────
 let currentNodeName  = 'layer';
 let tooltipVisible   = false;
+let exportGeneration = 0;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function normalizeHex(raw: string): string {
@@ -138,6 +139,7 @@ function handleNodeMetadata(payload: NodeMetadata): void {
 }
 
 async function handleExportResult(payload: ExportResult): Promise<void> {
+  const generation = ++exportGeneration;
   setStatus('Compositing pixels…');
 
   try {
@@ -153,6 +155,10 @@ async function handleExportResult(payload: ExportResult): Promise<void> {
     const previewUrl = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = () => {
+      if (generation !== exportGeneration) {
+        URL.revokeObjectURL(previewUrl);
+        return;
+      }
       const ctx = previewCanvas.getContext('2d');
       if (!ctx) return;
       previewCanvas.width  = payload.width;
@@ -161,6 +167,9 @@ async function handleExportResult(payload: ExportResult): Promise<void> {
       URL.revokeObjectURL(previewUrl);
       previewPlaceholder.hidden = true;
       previewCanvas.hidden = false;
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(previewUrl);
     };
     img.src = previewUrl;
 
