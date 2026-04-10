@@ -1,5 +1,5 @@
 {
-  "name": "Blend Flatten",
+  "name": "Flatten Blend",
   "id": "<assigned-by-figma>",
   "api": "1.0.0",
   "main": "dist/code.js",
