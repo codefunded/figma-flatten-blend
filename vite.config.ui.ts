@@ -10,6 +10,7 @@ export default defineConfig({
     emptyOutDir: false,
     target: 'es2020',
     rollupOptions: {
+      input: path.resolve('src/ui/ui.html'),
       output: { entryFileNames: '[name].js' },
     },
   },
