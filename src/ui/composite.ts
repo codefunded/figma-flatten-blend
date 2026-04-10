@@ -37,13 +37,15 @@ export function compositePixels(
 
 /**
  * Decodes a PNG byte array into ImageData via an OffscreenCanvas.
+ *
+ * PRECONDITION: `bytes` must be a PNG with exactly `width × height` pixels.
+ * Dimensions are not validated; a mismatch will silently produce incorrect pixel data.
  */
 async function decodeToImageData(
   bytes: Uint8Array,
   width: number,
   height: number,
 ): Promise<ImageData> {
-  // Cast to BlobPart to satisfy strict typing
   const blob = new Blob([bytes as BlobPart], { type: 'image/png' });
   const bitmap = await createImageBitmap(blob);
   const canvas = new OffscreenCanvas(width, height);
@@ -73,9 +75,7 @@ export async function compositeBlob(
   const outputCanvas = new OffscreenCanvas(width, height);
   const ctx = outputCanvas.getContext('2d');
   if (!ctx) throw new Error('Failed to get 2D context for output canvas');
-  // Create new Uint8ClampedArray with regular ArrayBuffer for ImageData
-  const outputArray = new Uint8ClampedArray(output);
-  ctx.putImageData(new ImageData(outputArray, width, height), 0, 0);
+  ctx.putImageData(new ImageData(output as ImageDataArray, width, height), 0, 0);
 
   return outputCanvas.convertToBlob({ type: 'image/png' });
 }
