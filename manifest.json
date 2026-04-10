@@ -1,6 +1,6 @@
 {
   "name": "Flatten Blend",
-  "id": "<assigned-by-figma>",
+  "id": "1624442377315278998",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",
